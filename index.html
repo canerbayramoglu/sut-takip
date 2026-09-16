@@ -66,7 +66,7 @@ p.n{color:var(--mut);font-size:13px}
 <label>Kaç gün içinde tüketilmeli?</label><input id="a_days" type="number" min="1" max="60" inputmode="numeric">
 <label>Açılış zamanı</label><input id="a_time" type="datetime-local">
 <label>Fotoğraf (isteğe bağlı)</label><input id="a_photo" type="file" accept="image/*" capture="environment">
-<div class="row"><button class="btn" onclick="close('add')">Vazgeç</button><button class="btn p" onclick="save()">Kaydet</button></div>
+<div class="row"><button class="btn" onclick="closeSheet('add')">Vazgeç</button><button class="btn p" onclick="save()">Kaydet</button></div>
 </div></div>
 
 <div class="sheet" id="set"><div class="pane">
@@ -76,7 +76,7 @@ p.n{color:var(--mut);font-size:13px}
 <h2 style="margin-top:18px">Ürün preset'leri</h2>
 <div class="plist" id="plist"></div>
 <button class="btn" onclick="addPreset()">＋ Preset ekle</button>
-<div class="row"><button class="btn" onclick="close('set')">Kapat</button><button class="btn p" onclick="saveSettings()">Kaydet</button></div>
+<div class="row"><button class="btn" onclick="closeSheet('set')">Kapat</button><button class="btn p" onclick="saveSettings()">Kaydet</button></div>
 </div></div>
 
 <script>
@@ -123,14 +123,14 @@ function openAdd(){selPreset=null;const g=$("presets");g.innerHTML="";
 function pick(i){document.querySelectorAll(".pre").forEach(x=>x.classList.remove("sel"));
  if(i<0){$("preX").classList.add("sel");selPreset=null;$("a_name").value="";$("a_days").value=3;$("a_name").focus();return}
  const p=data.presets[i];selPreset=p;$("pre"+i).classList.add("sel");$("a_name").value=p.n;$("a_days").value=p.d}
-function close(id){$(id).classList.remove("on")}
+function closeSheet(id){$(id).classList.remove("on")}
 function shrink(file){return new Promise(res=>{const img=new Image();img.onload=()=>{const m=480,k=Math.min(1,m/Math.max(img.width,img.height)),c=document.createElement("canvas");
  c.width=img.width*k;c.height=img.height*k;c.getContext("2d").drawImage(img,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",.7))};img.src=URL.createObjectURL(file)})}
 async function save(){const n=$("a_name").value.trim(),d=parseInt($("a_days").value),t=$("a_time").value;
  if(!n||!d||!t){alert("Ad, gün ve zaman gerekli.");return}
  const it={id:Date.now().toString(36),n,e:selPreset?selPreset.e:"📦",days:d,openedAt:new Date(t).toISOString()};
  const f=$("a_photo").files[0];if(f){try{localStorage.setItem("ph_"+it.id,await shrink(f))}catch(e){}}
- data.items.push(it);render();close("add");
+ data.items.push(it);render();closeSheet("add");
  if(!await push(`Açıldı: ${n}`)){data.items.pop();localStorage.removeItem("ph_"+it.id);render()}}
 async function finish(id){if(!confirm("Bu ürünü listeden kaldır?"))return;
  const bak=[...data.items];data.items=data.items.filter(x=>x.id!==id);render();
@@ -144,7 +144,7 @@ function readPresets(){const out={};document.querySelectorAll("#plist input").fo
 function addPreset(){data.presets=readPresets();data.presets.push({e:"📦",n:"",d:3});openSettings()}
 function delPreset(i){data.presets=readPresets();data.presets.splice(i,1);openSettings()}
 async function saveSettings(){const t=$("s_tok").value.trim();if(t)localStorage.setItem("gh_token",t);else localStorage.removeItem("gh_token");
- data.presets=readPresets();close("set");if(sha!==null||data.items.length||t){await load();data.presets=readPresets();await push("Ayarlar")}render()}
+ data.presets=readPresets();closeSheet("set");if(sha!==null||data.items.length||t){await load();data.presets=readPresets();await push("Ayarlar")}render()}
 load();setInterval(render,60000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)load()});
 </script>
 </body>
