@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Süt Takip">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Süt Takip</title>
+<style>
+:root{--bg:#0f1115;--card:#181b22;--card2:#20242d;--txt:#e6e8ee;--mut:#8b91a1;--line:#2a2f3a;
+--ok:#2ecc71;--warn:#f1c40f;--bad:#e74c3c;--acc:#4f8cff;--r:16px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{padding:env(safe-area-inset-top) 16px calc(96px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 0 10px}
+h1{font-size:22px;margin:0}
+.ic{background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:8px 12px;font-size:15px}
+#status{font-size:12px;color:var(--mut);margin-bottom:10px;min-height:16px}
+.card{background:var(--card);border-radius:var(--r);padding:14px;margin-bottom:12px;border-left:6px solid var(--mut);display:flex;gap:12px}
+.card.ok{border-color:var(--ok)}.card.warn{border-color:var(--warn)}.card.bad{border-color:var(--bad)}
+.ph{width:84px;height:84px;border-radius:12px;background:var(--card2);object-fit:cover;flex:none;display:flex;align-items:center;justify-content:center;font-size:36px}
+.info{flex:1;min-width:0}
+.nm{font-size:18px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.badge{font-size:12px;padding:3px 8px;border-radius:999px;background:var(--card2);color:var(--txt)}
+.badge.ok{background:var(--ok);color:#000}.badge.warn{background:var(--warn);color:#000}.badge.bad{background:var(--bad);color:#fff}
+.ln{font-size:14px;color:var(--mut);margin-top:4px}
+.ln b{color:var(--txt);font-weight:500}
+.big{font-size:20px;font-weight:700;margin-top:6px}
+.row{display:flex;gap:8px;margin-top:10px}
+.btn{flex:1;border:0;border-radius:12px;padding:12px;font-size:15px;font-weight:600;background:var(--card2);color:var(--txt)}
+.btn.p{background:var(--acc);color:#fff}.btn.d{background:#3a1f22;color:#ff8a80}
+#empty{color:var(--mut);text-align:center;padding:60px 20px}
+#fab{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));padding:18px;border:0;border-radius:18px;background:var(--acc);color:#fff;font-size:18px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:flex-end;z-index:9}
+.sheet.on{display:flex}
+.pane{background:var(--card);width:100%;border-radius:22px 22px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}
+.pane h2{margin:0 0 12px;font-size:18px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pre{background:var(--card2);border:2px solid transparent;border-radius:14px;padding:12px 6px;text-align:center;font-size:14px}
+.pre .e{font-size:28px}.pre small{display:block;color:var(--mut)}
+.pre.sel{border-color:var(--acc)}
+label{display:block;color:var(--mut);font-size:13px;margin:14px 0 6px}
+input,select{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:12px;font-size:16px;color-scheme:dark}
+.mini{display:flex;gap:8px;align-items:center}
+.plist div{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.plist input{padding:8px}
+.x{background:none;border:0;color:var(--bad);font-size:20px}
+p.n{color:var(--mut);font-size:13px}
+</style>
+</head>
+<body>
+<header><h1>🥛 Süt Takip</h1><button class="ic" onclick="openSettings()">⚙️</button></header>
+<div id="status"></div>
+<div id="list"></div>
+<div id="empty" style="display:none">Açık ürün yok.<br>Bir şey açınca aşağıdan ekle.</div>
+<button id="fab" onclick="openAdd()">＋ Ürün Aç</button>
+
+<div class="sheet" id="add"><div class="pane">
+<h2>Ne açtın?</h2>
+<div class="grid" id="presets"></div>
+<label>Ürün adı</label><input id="a_name">
+<label>Kaç gün içinde tüketilmeli?</label><input id="a_days" type="number" min="1" max="60" inputmode="numeric">
+<label>Açılış zamanı</label><input id="a_time" type="datetime-local">
+<label>Fotoğraf (isteğe bağlı)</label><input id="a_photo" type="file" accept="image/*" capture="environment">
+<div class="row"><button class="btn" onclick="close('add')">Vazgeç</button><button class="btn p" onclick="save()">Kaydet</button></div>
+</div></div>
+
+<div class="sheet" id="set"><div class="pane">
+<h2>Ayarlar</h2>
+<label>GitHub token (sadece bu cihazda saklanır)</label><input id="s_tok" type="password" placeholder="github_pat_…">
+<p class="n" id="s_info"></p>
+<h2 style="margin-top:18px">Ürün preset'leri</h2>
+<div class="plist" id="plist"></div>
+<button class="btn" onclick="addPreset()">＋ Preset ekle</button>
+<div class="row"><button class="btn" onclick="close('set')">Kapat</button><button class="btn p" onclick="saveSettings()">Kaydet</button></div>
+</div></div>
+
+<script>
+const OWNER="canerbayramoglu",REPO="sut-takip",FILE="data.json",API=`https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`;
+const DEF_PRESETS=[{e:"🥛",n:"Süt",d:3},{e:"🥣",n:"Yoğurt",d:7},{e:"🥤",n:"Ayran",d:3},{e:"🧃",n:"Meyve suyu",d:5},{e:"🍞",n:"Ekmek",d:3},{e:"🧀",n:"Peynir",d:7}];
+let data={items:[],presets:DEF_PRESETS},sha=null,selPreset=null;
+const $=id=>document.getElementById(id);
+const tok=()=>localStorage.getItem("gh_token")||"";
+const fmt=t=>new Date(t).toLocaleString("tr-TR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+function state(it){const end=new Date(it.openedAt).getTime()+it.days*864e5,left=end-Date.now();
+ return {end,left,cls:left<0?"bad":left<864e5?"warn":"ok",txt:left<0?"SÜRE DOLDU":left<864e5?"SON GÜN":"Güvenli"}}
+function human(ms){const a=Math.abs(ms),d=Math.floor(a/864e5),h=Math.floor(a%864e5/36e5);
+ const s=d?`${d} gün ${h} sa`:`${h} sa ${Math.floor(a%36e5/6e4)} dk`;return ms<0?`${s} geçti`:`${s} kaldı`}
+function render(){const L=$("list");L.innerHTML="";const items=[...data.items].sort((a,b)=>state(a).left-state(b).left);
+ $("empty").style.display=items.length?"none":"block";
+ for(const it of items){const s=state(it),ph=localStorage.getItem("ph_"+it.id);
+  L.insertAdjacentHTML("beforeend",`<div class="card ${s.cls}">${ph?`<img class="ph" src="${ph}">`:`<div class="ph">${it.e||"📦"}</div>`}
+  <div class="info"><div class="nm"><span>${it.e||""} ${it.n}</span><span class="badge ${s.cls}">${s.txt}</span></div>
+  <div class="ln">Açıldı: <b>${fmt(it.openedAt)}</b></div><div class="ln">Son: <b>${fmt(s.end)}</b> (${it.days} gün)</div>
+  <div class="big">${human(s.left)}</div>
+  <div class="row"><button class="btn d" onclick="finish('${it.id}')">Bitti / Döktüm</button></div></div></div>`)}}
+function setStatus(t){$("status").textContent=t}
+async function load(){const c=localStorage.getItem("cache");if(c){data=JSON.parse(c);render()}
+ try{const h={Accept:"application/vnd.github+json"};if(tok())h.Authorization="Bearer "+tok();
+  const r=await fetch(API+"?t="+Date.now(),{headers:h,cache:"no-store"});
+  if(r.status===404){sha=null;setStatus("Bulutta veri yok, ilk kayıtla oluşacak");return}
+  if(!r.ok)throw new Error(r.status);const j=await r.json();sha=j.sha;
+  data=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,"")))));
+  if(!data.presets||!data.presets.length)data.presets=DEF_PRESETS;
+  localStorage.setItem("cache",JSON.stringify(data));setStatus("Bulutla eşitlendi · "+new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"}));render()}
+ catch(e){setStatus("Çevrimdışı — son kayıtlı veri gösteriliyor")}}
+async function push(msg){if(!tok()){alert("Önce Ayarlar'dan GitHub token gir.");openSettings();return false}
+ const body={message:msg,content:btoa(unescape(encodeURIComponent(JSON.stringify(data,null,1))))};if(sha)body.sha=sha;
+ setStatus("Kaydediliyor…");
+ const r=await fetch(API,{method:"PUT",headers:{Authorization:"Bearer "+tok(),Accept:"application/vnd.github+json","Content-Type":"application/json"},body:JSON.stringify(body)});
+ if(!r.ok){setStatus("Kaydedilemedi ("+r.status+")");alert("Kaydedilemedi: "+r.status+"\nToken veya internet kontrol et.");return false}
+ sha=(await r.json()).content.sha;localStorage.setItem("cache",JSON.stringify(data));setStatus("Kaydedildi ✓");return true}
+function openAdd(){selPreset=null;const g=$("presets");g.innerHTML="";
+ data.presets.forEach((p,i)=>g.insertAdjacentHTML("beforeend",`<div class="pre" id="pre${i}" onclick="pick(${i})"><div class="e">${p.e}</div>${p.n}<small>${p.d} gün</small></div>`));
+ g.insertAdjacentHTML("beforeend",`<div class="pre" id="preX" onclick="pick(-1)"><div class="e">📦</div>Diğer<small>elle</small></div>`);
+ $("a_name").value="";$("a_days").value="";$("a_photo").value="";
+ const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());$("a_time").value=d.toISOString().slice(0,16);
+ pick(0);$("add").classList.add("on")}
+function pick(i){document.querySelectorAll(".pre").forEach(x=>x.classList.remove("sel"));
+ if(i<0){$("preX").classList.add("sel");selPreset=null;$("a_name").value="";$("a_days").value=3;$("a_name").focus();return}
+ const p=data.presets[i];selPreset=p;$("pre"+i).classList.add("sel");$("a_name").value=p.n;$("a_days").value=p.d}
+function close(id){$(id).classList.remove("on")}
+function shrink(file){return new Promise(res=>{const img=new Image();img.onload=()=>{const m=480,k=Math.min(1,m/Math.max(img.width,img.height)),c=document.createElement("canvas");
+ c.width=img.width*k;c.height=img.height*k;c.getContext("2d").drawImage(img,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",.7))};img.src=URL.createObjectURL(file)})}
+async function save(){const n=$("a_name").value.trim(),d=parseInt($("a_days").value),t=$("a_time").value;
+ if(!n||!d||!t){alert("Ad, gün ve zaman gerekli.");return}
+ const it={id:Date.now().toString(36),n,e:selPreset?selPreset.e:"📦",days:d,openedAt:new Date(t).toISOString()};
+ const f=$("a_photo").files[0];if(f){try{localStorage.setItem("ph_"+it.id,await shrink(f))}catch(e){}}
+ data.items.push(it);render();close("add");
+ if(!await push(`Açıldı: ${n}`)){data.items.pop();localStorage.removeItem("ph_"+it.id);render()}}
+async function finish(id){if(!confirm("Bu ürünü listeden kaldır?"))return;
+ const bak=[...data.items];data.items=data.items.filter(x=>x.id!==id);render();
+ if(await push("Bitti")){localStorage.removeItem("ph_"+id)}else{data.items=bak;render()}}
+function openSettings(){$("s_tok").value=tok();$("s_info").textContent=tok()?"Token kayıtlı.":"Token yok — kayıt yapılamaz, sadece görüntüleme.";
+ const P=$("plist");P.innerHTML="";data.presets.forEach((p,i)=>P.insertAdjacentHTML("beforeend",
+ `<div><input style="width:52px" value="${p.e}" data-k="e" data-i="${i}"><input value="${p.n}" data-k="n" data-i="${i}"><input style="width:64px" type="number" value="${p.d}" data-k="d" data-i="${i}"><button class="x" onclick="delPreset(${i})">✕</button></div>`));
+ $("set").classList.add("on")}
+function readPresets(){const out={};document.querySelectorAll("#plist input").forEach(x=>{const i=x.dataset.i;out[i]=out[i]||{};out[i][x.dataset.k]=x.dataset.k==="d"?parseInt(x.value)||1:x.value.trim()});
+ return Object.values(out).filter(p=>p.n)}
+function addPreset(){data.presets=readPresets();data.presets.push({e:"📦",n:"",d:3});openSettings()}
+function delPreset(i){data.presets=readPresets();data.presets.splice(i,1);openSettings()}
+async function saveSettings(){const t=$("s_tok").value.trim();if(t)localStorage.setItem("gh_token",t);else localStorage.removeItem("gh_token");
+ data.presets=readPresets();close("set");if(sha!==null||data.items.length||t){await load();data.presets=readPresets();await push("Ayarlar")}render()}
+load();setInterval(render,60000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)load()});
+</script>
+</body>
+</html>
