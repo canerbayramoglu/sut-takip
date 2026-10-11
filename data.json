@@ -1,13 +1,5 @@
 {
- "items": [
-  {
-   "id": "muysqlke",
-   "n": "Süt",
-   "e": "🥛",
-   "days": 3,
-   "openedAt": "2026-10-08T00:26:00.000Z"
-  }
- ],
+ "items": [],
  "presets": [
   {
    "e": "🥛",
