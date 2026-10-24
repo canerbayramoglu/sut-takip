@@ -1,13 +1,5 @@
 {
- "items": [
-  {
-   "id": "mvhrfu2e",
-   "n": "Süt",
-   "e": "🥛",
-   "days": 3,
-   "openedAt": "2026-10-21T06:57:00.000Z"
-  }
- ],
+ "items": [],
  "presets": [
   {
    "e": "🥛",
