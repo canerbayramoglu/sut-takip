@@ -1,5 +1,13 @@
 {
- "items": [],
+ "items": [
+  {
+   "id": "mvmmlv8y",
+   "n": "Banvit Sucuk",
+   "e": "📦",
+   "days": 3,
+   "openedAt": "2026-10-24T16:26:00.000Z"
+  }
+ ],
  "presets": [
   {
    "e": "🥛",
